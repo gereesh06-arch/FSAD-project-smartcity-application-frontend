@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import IssueForm from '../../components/IssueForm'
 import { listIssues } from '../../api/issues'
 
 export default function ReportIssue() {
+  const [searchParams] = useSearchParams()
   const [recentIssues, setRecentIssues] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const selectedService = searchParams.get('service') || ''
+  const selectedCategory = searchParams.get('category') || ''
 
   useEffect(() => {
     let alive = true
@@ -47,7 +51,18 @@ export default function ReportIssue() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form */}
         <div className="lg:col-span-2">
-          <IssueForm onSubmit={handleNewIssue} />
+          {selectedService && (
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm text-blue-900">
+                Reporting issue for: <span className="font-semibold">{selectedService}</span>
+              </p>
+            </div>
+          )}
+          <IssueForm
+            onSubmit={handleNewIssue}
+            initialService={selectedService}
+            initialCategory={selectedCategory}
+          />
         </div>
 
         {/* Sidebar Info */}

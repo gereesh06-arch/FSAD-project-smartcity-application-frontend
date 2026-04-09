@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Search, Filter } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import ServiceCard from '../../components/ServiceCard'
 import { Droplets, Zap, Trash2, Bus, Wifi } from 'lucide-react'
 import { listServices } from '../../api/services'
 
 export default function Services() {
+  const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [services, setServices] = useState([])
@@ -67,6 +69,14 @@ export default function Services() {
     return matchesCategory && matchesSearch
   })
 
+  const handleServiceReport = (service) => {
+    const params = new URLSearchParams({
+      service: service.name || '',
+      category: service.category || 'other',
+    })
+    navigate(`/user/report-issue?${params.toString()}`)
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -122,7 +132,7 @@ export default function Services() {
           </div>
         ) : filteredServices.length > 0 ? (
           filteredServices.map((service, idx) => (
-            <ServiceCard key={idx} {...service} />
+            <ServiceCard key={idx} {...service} onClick={() => handleServiceReport(service)} />
           ))
         ) : (
           <div className="col-span-full text-center py-12">

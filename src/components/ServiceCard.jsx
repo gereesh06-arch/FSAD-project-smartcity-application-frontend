@@ -40,6 +40,7 @@ export default function ServiceCard({
 
       <h3 className="text-xl font-bold text-gray-900 mb-2">{name}</h3>
       <p className="text-gray-600 text-sm mb-4">{description}</p>
+      <p className="text-xs font-semibold text-blue-600 mb-4">Click to report an issue for this service</p>
 
       <div className="space-y-2 text-xs text-gray-500">
         <div className="flex items-center space-x-2">

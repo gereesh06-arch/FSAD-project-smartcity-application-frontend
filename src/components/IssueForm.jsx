@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertCircle, Send } from 'lucide-react'
 import { createIssue } from '../api/issues'
 
-export default function IssueForm({ onSubmit }) {
+const ALLOWED_CATEGORIES = ['water', 'electricity', 'waste', 'transport', 'other']
+
+function normalizeCategory(category) {
+  return ALLOWED_CATEGORIES.includes(category) ? category : 'other'
+}
+
+export default function IssueForm({ onSubmit, initialService = '', initialCategory = 'water' }) {
   const [formData, setFormData] = useState({
-    title: '',
-    category: 'water',
+    title: initialService ? `${initialService} issue` : '',
+    category: normalizeCategory(initialCategory),
     description: '',
     location: '',
     priority: 'medium',
@@ -13,6 +19,14 @@ export default function IssueForm({ onSubmit }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      title: initialService ? `${initialService} issue` : prev.title,
+      category: normalizeCategory(initialCategory),
+    }))
+  }, [initialService, initialCategory])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -32,8 +46,8 @@ export default function IssueForm({ onSubmit }) {
       setMessage('Issue reported successfully! Our team will review it shortly.')
       const submitted = created || { ...formData } // capture before reset
       setFormData({
-        title: '',
-        category: 'water',
+        title: initialService ? `${initialService} issue` : '',
+        category: normalizeCategory(initialCategory),
         description: '',
         location: '',
         priority: 'medium',
