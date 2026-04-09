@@ -2,6 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react'
 import { register as registerApi } from '../api/auth'
+import { digitsOnlyPhone, isValidTenDigitPhone, PHONE_TEN_DIGIT_MESSAGE } from '../utils/phone'
+import {
+  PASSWORD_RULES,
+  normalizeRegisterEmail,
+  validateEmail,
+  validateFullName,
+  validateRegisterPassword,
+} from '../utils/registerValidation'
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -20,6 +28,11 @@ export default function Register() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    if (name === 'phone' && type !== 'checkbox') {
+      const digits = digitsOnlyPhone(value).slice(0, 10)
+      setFormData((prev) => ({ ...prev, phone: digits }))
+      return
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -31,14 +44,31 @@ export default function Register() {
     setError('')
     setSuccess(false)
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
+    const nameErr = validateFullName(formData.fullName)
+    if (nameErr) {
+      setError(nameErr)
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    const emailErr = validateEmail(formData.email)
+    if (emailErr) {
+      setError(emailErr)
+      return
+    }
+
+    if (!isValidTenDigitPhone(formData.phone)) {
+      setError(PHONE_TEN_DIGIT_MESSAGE)
+      return
+    }
+
+    const pwdErr = validateRegisterPassword(formData.password)
+    if (pwdErr) {
+      setError(pwdErr)
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
@@ -51,9 +81,9 @@ export default function Register() {
 
     try {
       await registerApi({
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
+        fullName: formData.fullName.trim(),
+        email: normalizeRegisterEmail(formData.email),
+        phone: digitsOnlyPhone(formData.phone),
         password: formData.password,
         role: formData.role,
       })
@@ -125,6 +155,9 @@ export default function Register() {
                 onChange={handleChange}
                 placeholder="John Doe"
                 required
+                minLength={2}
+                maxLength={80}
+                autoComplete="name"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 transition"
               />
             </div>
@@ -141,6 +174,8 @@ export default function Register() {
                 onChange={handleChange}
                 placeholder="your@email.com"
                 required
+                maxLength={254}
+                autoComplete="email"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 transition"
               />
             </div>
@@ -153,11 +188,18 @@ export default function Register() {
               <input
                 type="tel"
                 name="phone"
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={10}
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+1 (555) 0123"
+                placeholder="10-digit mobile number"
+                required
+                title={PHONE_TEN_DIGIT_MESSAGE}
+                pattern="\d{10}"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 transition"
               />
+              <p className="text-xs text-gray-500 mt-1">Enter exactly 10 digits (numbers only).</p>
             </div>
 
             {/* Role */}
@@ -188,8 +230,23 @@ export default function Register() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 transition"
               />
+              <ul className="mt-2 space-y-1 text-xs">
+                {PASSWORD_RULES.map((rule) => {
+                  const ok = rule.test(formData.password)
+                  return (
+                    <li
+                      key={rule.label}
+                      className={ok ? 'text-emerald-700 flex items-center gap-1.5' : 'text-gray-500 flex items-center gap-1.5'}
+                    >
+                      <span className="font-semibold">{ok ? '✓' : '○'}</span>
+                      {rule.label}
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
 
             {/* Confirm Password */}
@@ -204,6 +261,7 @@ export default function Register() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 transition"
               />
             </div>

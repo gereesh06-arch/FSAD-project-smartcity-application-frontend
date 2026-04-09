@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, AlertCircle, ShieldCheck, UserRound } from 'lucide-react'
+import { LogIn, AlertCircle } from 'lucide-react'
 import { login as loginApi, setAuthSession } from '../api/auth'
 
 export default function Login() {
@@ -8,7 +8,6 @@ export default function Login() {
     email: '',
     password: '',
   })
-  const [loginAs, setLoginAs] = useState('user')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -27,12 +26,10 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      const { token, user } = await loginApi(formData)
-
-      if ((user?.role || 'user') !== loginAs) {
-        setError(`This account is not registered as ${loginAs}. Please choose the correct login type.`)
-        return
-      }
+      const { token, user } = await loginApi({
+        email: formData.email.trim(),
+        password: formData.password,
+      })
 
       setAuthSession({ token, user })
 
@@ -69,40 +66,6 @@ export default function Login() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Login Type */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Login As</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLoginAs('user')}
-                  className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2 ${
-                    loginAs === 'user'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
-                      : 'border-slate-300 text-slate-700 hover:border-blue-400'
-                  }`}
-                >
-                  <UserRound size={16} />
-                  User
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginAs('admin')}
-                  className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2 ${
-                    loginAs === 'admin'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm'
-                      : 'border-slate-300 text-slate-700 hover:border-blue-400'
-                  }`}
-                >
-                  <ShieldCheck size={16} />
-                  Admin
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                Choose your account type before signing in.
-              </p>
-            </div>
-
             {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -153,7 +116,7 @@ export default function Login() {
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-blue-500/30"
             >
               <LogIn size={20} />
-              <span>{isLoading ? 'Signing In...' : `Sign In as ${loginAs === 'admin' ? 'Admin' : 'User'}`}</span>
+              <span>{isLoading ? 'Signing In...' : 'Sign In'}</span>
             </button>
           </form>
 
